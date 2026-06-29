@@ -116,7 +116,7 @@ audira/
 - [x] Esquema do banco
 - [x] Sub-fluxo #1 — captura de audiências (DJEN → Claude → banco)
 - [x] Sub-fluxo #2 — decisão presencial × virtual + correspondente + contato inicial do cliente
-- [ ] Sub-fluxo #3 — contato com cliente / "está na cidade?" / documentos
+- [x] Sub-fluxo #3 — resposta do cliente ("está na cidade?") → documentos (passo 6) ou testemunhas (passo 7)
 - [ ] Sub-fluxo #4 — testemunhas (coleta, decisão, orientações)
 - [ ] Sub-fluxo #5 — grupo de WhatsApp
 - [ ] Sub-fluxo #6 — documentos + cobranças 24/48/72h

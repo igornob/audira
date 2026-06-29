@@ -35,3 +35,33 @@ export function montarContatoInicialCliente(a: Audiencia): string {
     `(responda *SIM* ou *NÃO*)`
   );
 }
+
+/**
+ * Passo 6 — cliente fora da cidade.
+ * Pede os documentos para fundamentar o pedido de comparecimento virtual.
+ */
+export function montarPedidoDocsCliente(a: Audiencia): string {
+  const cidade = a.cidade ? ` de ${a.cidade}` : ' do processo';
+  return (
+    `Entendido! Como você não estará na cidade${cidade} na data, ` +
+    `podemos pedir ao juízo que você participe *virtualmente*.\n\n` +
+    `Para fundamentar esse pedido, precisamos que você envie um ou mais destes documentos:\n` +
+    `• *Contrato de trabalho* (se estiver trabalhando em outra cidade/embarcado)\n` +
+    `• *Passagens* (aéreas, marítimas ou rodoviárias)\n` +
+    `• *Contrato de locação* na outra cidade\n` +
+    `• Ou documento equivalente que comprove que você estará fora\n\n` +
+    `Pode enviar as fotos ou PDFs aqui mesmo neste WhatsApp. 🙏`
+  );
+}
+
+/**
+ * Passo 7 — pergunta sobre testemunhas.
+ */
+export function montarPerguntaTestemunhas(_a: Audiencia): string {
+  return (
+    `Perfeito! Vamos seguir com a preparação.\n\n` +
+    `*Haverá testemunhas* na sua audiência? (responda *SIM* ou *NÃO*)\n\n` +
+    `Se sim, por favor envie, para *cada testemunha*: *nome completo*, *telefone*, ` +
+    `*cidade* e *estado* onde ela mora.`
+  );
+}

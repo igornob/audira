@@ -1,5 +1,6 @@
 import express from 'express';
 import { query } from './db.js';
+import { rotearMensagem } from './flows/roteador.js';
 
 export function buildServer() {
   const app = express();
@@ -20,11 +21,19 @@ export function buildServer() {
     res.json(rows);
   });
 
-  // Webhook do WhatsApp (respostas do cliente/testemunhas chegam aqui via n8n)
-  // TODO: Sub-fluxo da conversa — interpretar com Claude e avançar a máquina de estados.
+  // Webhook do WhatsApp (respostas do cliente/testemunhas chegam aqui via n8n).
+  // Espera { telefone, texto } — ajuste conforme o payload do seu provedor/n8n.
   app.post('/webhook/whatsapp', async (req, res) => {
-    console.log('[webhook] WhatsApp recebido:', JSON.stringify(req.body));
+    const telefone: string | undefined = req.body?.telefone ?? req.body?.from;
+    const texto: string | undefined = req.body?.texto ?? req.body?.message ?? req.body?.body;
+    if (!telefone || !texto) {
+      return res.status(400).json({ error: 'payload precisa de { telefone, texto }' });
+    }
+    // Responde rápido ao provedor e processa em seguida.
     res.json({ received: true });
+    rotearMensagem(telefone, texto).catch((err) =>
+      console.error('[webhook] erro ao rotear mensagem:', err),
+    );
   });
 
   return app;

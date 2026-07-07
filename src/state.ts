@@ -7,9 +7,12 @@ export type EstadoFluxo =
   | 'aguardando_local_cliente'
   | 'aguardando_docs_cliente'
   | 'coleta_testemunhas'
+  | 'aguardando_cidade_testemunha'
   | 'aguardando_docs_testemunha'
+  | 'aguardando_orientacoes_testemunha'
   | 'grupo_criado'
   | 'preparacao'
+  | 'aguardando_confirmacao_checklist'
   | 'reuniao_agendada'
   | 'concluida'
   | 'sem_contato';
@@ -27,6 +30,7 @@ export interface Audiencia {
   modalidade: 'presencial' | 'virtual' | null;
   cliente_nome: string | null;
   cliente_telefone: string | null;
+  link_audiencia: string | null;
   estado_fluxo: EstadoFluxo;
 }
 

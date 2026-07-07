@@ -73,16 +73,23 @@ npm install
 cp .env.example .env
 # preencha as variáveis (banco, OABs, chave Anthropic, URL do n8n)
 
-# 3. Criar as tabelas no banco
+# 3. Criar as tabelas no banco (rode os 3 arquivos, nesta ordem)
 psql "$DATABASE_URL" -f db/schema.sql
 psql "$DATABASE_URL" -f db/migrations/001_estado_fluxo.sql
+psql "$DATABASE_URL" -f db/migrations/002_lembretes.sql
 # (ou cole os arquivos no SQL Editor do Supabase, nessa ordem)
 
-# 4. Rodar em desenvolvimento (server + scheduler)
+# 4. Rodar em desenvolvimento (server + agendadores)
 npm run dev
+# Painel de acompanhamento: http://localhost:3000/
 
-# Rodar a captura do DJEN uma vez, manualmente (teste)
-npm run capture
+# Jobs avulsos (teste manual)
+npm run capture     # captura do DJEN uma vez
+npm run cobrancas   # processa cobranças de documentos pendentes
+npm run lembretes   # processa lembretes/reunião do dia
+
+# Produção
+npm run build && npm start
 ```
 
 ---
@@ -91,23 +98,36 @@ npm run capture
 
 ```
 audira/
-├── README.md
-├── package.json
-├── tsconfig.json
-├── .env.example
+├── README.md  ·  package.json  ·  tsconfig.json  ·  .env.example
 ├── db/
-│   └── schema.sql                 # esquema do banco (tabelas, status)
+│   ├── schema.sql                 # esquema do banco (tabelas, status)
+│   └── migrations/                # 001_estado_fluxo, 002_lembretes
 └── src/
-    ├── index.ts                   # ponto de entrada: server + scheduler
-    ├── config.ts                  # leitura/validação das variáveis de ambiente
-    ├── db.ts                      # pool de conexão PostgreSQL
-    ├── server.ts                  # API + webhooks (painel e WhatsApp)
+    ├── index.ts                   # entrada: server + 3 agendadores (cron)
+    ├── config.ts                  # variáveis de ambiente
+    ├── db.ts                      # pool PostgreSQL
+    ├── state.ts                   # máquina de estados da audiência
+    ├── status.ts                  # cálculo do semáforo (painel 18)
+    ├── server.ts                  # API: painéis 17/18, encerramento, webhook
+    ├── dashboard.ts               # página web do painel de acompanhamento
     ├── jobs/
-    │   └── captureHearings.ts     # Sub-fluxo #1: DJEN → Claude → banco
+    │   ├── captureHearings.ts     # #1: DJEN → Claude → banco → inicia fluxo
+    │   ├── cobrancas.ts           # #6: cobranças 24/48/72h (de hora em hora)
+    │   └── lembretes.ts           # #8: lembretes 7d/1d/dia (diário)
+    ├── flows/
+    │   ├── prepararAudiencia.ts   # #2: modalidade + contato inicial
+    │   ├── respostaLocalCliente.ts# #3: "está na cidade?" → docs ou testemunhas
+    │   ├── testemunhas.ts         # #4: coleta, decisão, orientações
+    │   ├── documentos.ts          # #6: recebimento de documentos
+    │   ├── grupo.ts               # #5: grupo de WhatsApp + checklist virtual
+    │   └── roteador.ts            # despacha mensagens recebidas por estado
     └── services/
-        ├── djen.ts                # consulta à Comunica API (DJEN)
-        ├── claude.ts              # extração/interpretação com Claude
-        └── n8n.ts                 # dispara webhooks do n8n (WhatsApp, Zoom)
+        ├── djen.ts                # Comunica API (DJEN)
+        ├── claude.ts              # extração da intimação
+        ├── interpret.ts           # interpretação de respostas livres
+        ├── messages.ts            # templates de mensagens
+        ├── whatsapp.ts            # envio (via n8n) + log
+        └── n8n.ts                 # webhooks do n8n (WhatsApp, Zoom, grupo)
 ```
 
 ---
@@ -117,13 +137,13 @@ audira/
 - [x] Sub-fluxo #1 — captura de audiências (DJEN → Claude → banco)
 - [x] Sub-fluxo #2 — decisão presencial × virtual + correspondente + contato inicial do cliente
 - [x] Sub-fluxo #3 — resposta do cliente ("está na cidade?") → documentos (passo 6) ou testemunhas (passo 7)
-- [ ] Sub-fluxo #4 — testemunhas (coleta, decisão, orientações)
-- [ ] Sub-fluxo #5 — grupo de WhatsApp
-- [ ] Sub-fluxo #6 — documentos + cobranças 24/48/72h
-- [ ] Sub-fluxo #7 — checklist de audiência virtual
-- [ ] Sub-fluxo #8 — reunião prévia + lembretes + dia da audiência
-- [ ] Sub-fluxo #9 — encerramento + status
-- [ ] Painéis 17 e 18 (web)
+- [x] Sub-fluxo #4 — testemunhas (coleta, decisão presencial×telepresencial, orientações)
+- [x] Sub-fluxo #5 — grupo de WhatsApp
+- [x] Sub-fluxo #6 — documentos + cobranças 24/48/72h (job agendado)
+- [x] Sub-fluxo #7 — checklist de audiência virtual
+- [x] Sub-fluxo #8 — reunião prévia + lembretes (7 dias / 1 dia / no dia)
+- [x] Sub-fluxo #9 — encerramento + status (endpoint)
+- [x] Painéis 17 (checklist) e 18 (acompanhamento + dashboard web)
 
 ---
 

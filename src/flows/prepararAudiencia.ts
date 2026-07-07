@@ -12,6 +12,7 @@ import { getAudiencia, setEstado } from '../state.js';
 import { montarContatoInicialCliente } from '../services/messages.js';
 import { enviarWhatsapp } from '../services/whatsapp.js';
 import { dispararN8n } from '../services/n8n.js';
+import { pedirTestemunhasOuSeguir } from './testemunhas.js';
 
 export async function prepararAudiencia(audienciaId: string): Promise<void> {
   const a = await getAudiencia(audienciaId);
@@ -52,8 +53,15 @@ export async function prepararAudiencia(audienciaId: string): Promise<void> {
     audienciaId: a.id,
     template: 'contato_inicial_cliente',
   });
-
-  // Aguardando a resposta "está na cidade?" (tratada no Sub-fluxo #3).
-  await setEstado(a.id, 'aguardando_local_cliente');
   console.log(`[prepara] ${a.id}: contato inicial enviado ao cliente.`);
+
+  if (a.modalidade === 'virtual') {
+    // Online: participa de onde estiver — sem "está na cidade?" nem documentos.
+    // Segue direto pelo tipo (testemunhas ou grupo).
+    await pedirTestemunhasOuSeguir(a);
+  } else {
+    // Presencial: aguarda a resposta "está na cidade?" (Sub-fluxo #3). Se estiver
+    // fora, pediremos documentos para requerer a participação online ao juiz.
+    await setEstado(a.id, 'aguardando_local_cliente');
+  }
 }

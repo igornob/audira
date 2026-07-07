@@ -10,7 +10,8 @@ import type { Audiencia } from '../state.js';
 import { setEstado } from '../state.js';
 import { interpretarRespostaLocal } from '../services/interpret.js';
 import { enviarWhatsapp } from '../services/whatsapp.js';
-import { montarPedidoDocsCliente, montarPerguntaTestemunhas } from '../services/messages.js';
+import { montarPedidoDocsCliente } from '../services/messages.js';
+import { pedirTestemunhasOuSeguir } from './testemunhas.js';
 import { query } from '../db.js';
 
 /** Documentos solicitados quando o cliente está fora da cidade (passo 6). */
@@ -41,16 +42,10 @@ export async function tratarRespostaLocal(a: Audiencia, texto: string): Promise<
   }
 
   if (r.na_cidade === true) {
-    // Passo 7 — cliente na cidade: parte para as testemunhas.
+    // Passo 7 — cliente na cidade. Pelo tipo, pergunta testemunhas ou segue.
     await query('UPDATE audiencias SET cliente_na_cidade = true WHERE id = $1', [a.id]);
-    await enviarWhatsapp({
-      telefone: a.cliente_telefone!,
-      texto: montarPerguntaTestemunhas(a),
-      audienciaId: a.id,
-      template: 'pergunta_testemunhas',
-    });
-    await setEstado(a.id, 'coleta_testemunhas');
-    console.log(`[fluxo3] ${a.id}: cliente na cidade → perguntando testemunhas.`);
+    console.log(`[fluxo3] ${a.id}: cliente na cidade.`);
+    await pedirTestemunhasOuSeguir(a);
     return;
   }
 

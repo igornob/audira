@@ -31,5 +31,11 @@ export const config = {
   djenBaseUrl: process.env.DJEN_BASE_URL ?? 'https://comunicaapi.pje.jus.br/api/v1',
   oabs: parseOabs(process.env.OABS_MONITORADAS ?? ''),
   n8nWebhookUrl: process.env.N8N_WEBHOOK_URL ?? '',
+  escritorioTelefone: process.env.ESCRITORIO_TELEFONE ?? '(83) 0000-0000',
+  twilio: {
+    accountSid: process.env.TWILIO_ACCOUNT_SID ?? '',
+    authToken: process.env.TWILIO_AUTH_TOKEN ?? '',
+    from: process.env.TWILIO_WHATSAPP_FROM ?? '', // ex.: whatsapp:+14155238886
+  },
   port: Number(process.env.PORT ?? 3000),
 };
